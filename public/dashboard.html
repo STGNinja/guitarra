@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Guitar Dashboard</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<link rel="stylesheet" href="dashboard.css">   
+ 
+</head>
+<body>
+  <!-- PHASED ROADMAP PRIORITY INJECTION -->
+  <div class="dashboard-container">
+    <main class="main-content">
+      <div class="header">
+        <button id="logoutBtn" class="btn btn-danger">Log Out</button>
+      </div>
+      <input type="text" id="searchInput" placeholder="Search files..." />
+      <div class="overlay">
+        <h3 class="mb-4 text-center">Your Guitar Files</h3>
+        <ul id="fileList" style="list-style: none; padding: 0;">
+          <!-- File items will be injected here -->
+        </ul>
+      </div>
+    </main>
+
+    <aside class="sidebar">
+      <section class="profile-section">
+        <div class="profile-avatar">
+          <img id="profileAvatar" src="" alt="User Avatar">
+          <div id="profileInitial"></div>
+        </div>
+        <div id="greeting" style="margin-top: 10px; font-weight: 600; text-align: right; width: 100%;">Welcome!</div>
+        <div class="settings-icon" title="Settings" style="margin-top: 15px; font-size: 24px; color: #666; cursor: pointer;">
+          <i class="fas fa-cog"></i>
+        </div>
+      </section>
+      <section class="recently-played">
+        <h3>Recently Played</h3>
+        <ul id="recentlyPlayedList" style="list-style:none; padding-left:0; margin-top:10px;">
+          <!-- Recently played items -->
+        </ul>
+      </section>
+      <section class="favorites-tab">
+        <h3>Favorites</h3>
+        <ul id="favoritesList" style="list-style:none; padding-left:0; margin-top:10px;">
+          <!-- Favorites items -->
+        </ul>
+      </section>
+      <section class="dark-mode-toggle" title="Toggle Dark Mode">
+        <i class="fas fa-moon"></i>
+      </section>
+    </aside>
+  </div>
+
+<script>
+  let guitarFiles = [];
+
+fetch('/api/files')
+  .then(res => res.json())
+  .then(data => {
+    guitarFiles = data;
+    displayFiles(searchInput.value);
+  })
+  .catch(err => console.error('Failed to load files:', err));
+
+  // Personalized Greeting fallback
+  const userNameFallback = localStorage.getItem('userName') || 'Guitar Lover';
+  document.getElementById('greeting').textContent = `Welcome, ${userNameFallback}!`;
+
+  const fileList = document.getElementById('fileList');
+  const searchInput = document.getElementById('searchInput');
+  // Remember last search
+  searchInput.value = localStorage.getItem('lastSearch') || '';
+
+  function displayFiles(filter = '') {
+    
+    fileList.innerHTML = '';
+    const filteredFiles = guitarFiles.filter(entry => entry.name.toLowerCase().includes(filter.toLowerCase()));
+    if (filteredFiles.length === 0) {
+      const li = document.createElement('li');
+      li.style.color = '#333';
+      li.textContent = 'No files match your search.';
+      fileList.appendChild(li);
+    } else {
+      filteredFiles.forEach((entry) => {
+        const ext = entry.file.split('.').pop();
+        const isFavorite = JSON.parse(localStorage.getItem('favorites') || '[]').includes(entry.file);
+        const li = document.createElement('li');
+        li.className = 'file-item';
+        li.innerHTML = `
+          <span>${entry.name} <span style="font-size: 0.85em; color: #666;">${ext}</span>${isFavorite ? ' <i class="fas fa-star" style="color:#f5a623;"></i>' : ''}</span>
+          <div>
+            <button class="btn btn-warning btn-sm favorite-btn" data-file="${entry.file}">${isFavorite ? 'Unfavorite' : 'Favorite'}</button>
+            <a href="guitar/${entry.file}" download class="btn btn-primary px-3 download-btn" data-file="${entry.file}">Download</a>
+          </div>
+          <div class="youtube-embed" style="margin-top: 10px;">
+            <iframe width="100%" height="200" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video" frameborder="0" allowfullscreen></iframe>
+          </div>
+        `;
+        fileList.appendChild(li);
+      });
+    }
+  }
+
+  function displayUserUploads(uid) {
+    const uploadsKey = `uploads_${uid}`;
+    let uploads = JSON.parse(localStorage.getItem(uploadsKey) || '[]');
+    uploads.forEach((entry) => {
+      const ext = entry.file.split('.').pop();
+      const li = document.createElement('li');
+      li.className = 'file-item';
+      li.innerHTML = `
+        <span>${entry.name} <span style="font-size: 0.85em; color: #666;">${ext}</span></span>
+        <div>
+          <a href="#" class="btn btn-primary px-3 download-upload-btn" data-file="${entry.file}">Download</a>
+        </div>
+      `;
+      fileList.appendChild(li);
+    });
+  }
+
+  displayFiles(searchInput.value);
+
+  // Display Recently Played
+  function displayRecentlyPlayed() {
+    const recent = JSON.parse(localStorage.getItem('recentDownloads') || '[]');
+    const list = document.getElementById('recentlyPlayedList');
+    list.innerHTML = '';
+    recent.forEach(file => {
+      const li = document.createElement('li');
+      li.textContent = file;
+      list.appendChild(li);
+    });
+  }
+  displayRecentlyPlayed();
+
+  // Display Favorites
+  function displayFavorites() {
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    const list = document.getElementById('favoritesList');
+    list.innerHTML = '';
+    favorites.forEach(file => {
+      const li = document.createElement('li');
+      li.textContent = file;
+      list.appendChild(li);
+    });
+  }
+  displayFavorites();
+
+  searchInput.addEventListener('input', (e) => {
+    localStorage.setItem('lastSearch', e.target.value);
+    displayFiles(e.target.value);
+  });
+
+  // Event delegation for favorite and download
+  fileList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('favorite-btn')) {
+      const file = e.target.getAttribute('data-file');
+      let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      if (favorites.includes(file)) {
+        favorites = favorites.filter(f => f !== file);
+      } else {
+        favorites.push(file);
+      }
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+      displayFiles(searchInput.value);
+      displayFavorites();
+    }
+    if (e.target.classList.contains('download-btn')) {
+      const file = e.target.getAttribute('data-file');
+      let recent = JSON.parse(localStorage.getItem('recentDownloads') || '[]');
+      recent = [file, ...recent.filter(f => f !== file)].slice(0, 5);
+      localStorage.setItem('recentDownloads', JSON.stringify(recent));
+      displayRecentlyPlayed();
+    }
+    if (e.target.classList.contains('download-upload-btn')) {
+      const fileName = e.target.getAttribute('data-file');
+      alert(`Simulating download of: ${fileName}`);
+      // Here, you could trigger a real download if the file were stored somewhere
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    window.location.href = 'index.html';
+  });
+
+
+  // Dark mode toggle logic
+  const darkToggle = document.querySelector('.dark-mode-toggle');
+  darkToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    // trigger classlistchange event for storage
+    const event = new Event('classlistchange');
+    document.body.dispatchEvent(event);
+  });
+
+  // Optional: Save mode preference
+  if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+  }
+
+  document.body.addEventListener('classlistchange', () => {
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  });
+
+  // Placeholder: Modal popup handling
+  // function openModal(content) {
+  //   // Show modal with content
+  // }
+
+  // Placeholder: Music player integration
+  // function playMusic(file) {
+  //   // Play selected guitar file audio
+  // }
+  // (Practice session and metronome sections removed as per new UI structure)
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDs_gdX5PR2zdW1pQ524SQK1t2MFolZL20",
+    authDomain: "guitar-e464d.firebaseapp.com",
+    projectId: "guitar-e464d",
+    storageBucket: "guitar-e464d.firebasestorage.app",
+    messagingSenderId: "858133122321",
+    appId: "1:858133122321:web:7f5969131626c943f590b0",
+    measurementId: "G-BZ76ZQPE16"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const analytics = getAnalytics(app);
+
+  // Drag-and-drop upload logic and user uploads display, now inside the module
+  const overlay = document.querySelector('.overlay');
+
+  overlay.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    overlay.style.border = '2px dashed #888';
+  });
+
+  overlay.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    overlay.style.border = 'none';
+  });
+
+  overlay.addEventListener('drop', (e) => {
+    e.preventDefault();
+    overlay.style.border = 'none';
+    const files = e.dataTransfer.files;
+
+    const user = auth.currentUser;
+    if (!user) {
+      alert('You must be logged in to upload files.');
+      return;
+    }
+    const uid = user.uid;
+    const uploadsKey = `uploads_${uid}`;
+    let uploads = JSON.parse(localStorage.getItem(uploadsKey) || '[]');
+
+    for (let file of files) {
+      uploads.push({
+        name: file.name,
+        file: file.name
+      });
+    }
+    localStorage.setItem(uploadsKey, JSON.stringify(uploads));
+    alert(`Uploaded ${files.length} file(s).`);
+    displayUserUploads(uid);
+  });
+
+  onAuthStateChanged(auth, (user) => {
+    const avatarImg = document.getElementById('profileAvatar');
+    const initialDiv = document.getElementById('profileInitial');
+    if (user) {
+      const displayName = user.displayName || user.email;
+      const email = user.email;
+      const photoURL = user.photoURL;
+
+      document.getElementById('greeting').textContent = `Welcome, ${displayName}!`;
+
+      if (photoURL) {
+        avatarImg.src = photoURL;
+        avatarImg.style.display = 'block';
+        initialDiv.style.display = 'none';
+      } else {
+        avatarImg.style.display = 'none';
+        initialDiv.textContent = email.charAt(0).toUpperCase();
+        initialDiv.style.display = 'flex';
+      }
+      displayUserUploads(user.uid);
+    } else {
+      avatarImg.style.display = 'none';
+      initialDiv.textContent = '';
+      initialDiv.style.display = 'none';
+    }
+  });
+  console.log('🔥 Firebase module active: syncing user data, uploads, preferences');// Adjustable Metronome
+const metronomeDiv = document.createElement('div');
+metronomeDiv.style.marginTop = '20px';
+metronomeDiv.innerHTML = `
+  <label for="bpmControl">Metronome BPM: <span id="bpmValue">60</span></label>
+  <input type="range" id="bpmControl" min="40" max="200" value="60" style="width: 100%;">
+  <button id="startMetronome" class="btn btn-primary" style="margin-top:10px;">Start Metronome</button>
+  <button id="stopMetronome" class="btn btn-danger" style="margin-top:10px; margin-left:10px;">Stop</button>
+`;
+document.querySelector('.header').appendChild(metronomeDiv);
+
+let metronomeInterval;
+const bpmControl = document.getElementById('bpmControl');
+const bpmValue = document.getElementById('bpmValue');
+bpmControl.addEventListener('input', () => {
+  bpmValue.textContent = bpmControl.value;
+});
+
+document.getElementById('startMetronome').addEventListener('click', () => {
+  const bpm = bpmControl.value;
+  const interval = 60000 / bpm;
+  if (metronomeInterval) clearInterval(metronomeInterval);
+  metronomeInterval = setInterval(() => {
+    console.log('Tick');
+    const audio = new Audio('metronome-85688.mp3');
+    audio.play();
+  }, interval);
+});
+
+document.getElementById('stopMetronome').addEventListener('click', () => {
+  if (metronomeInterval) clearInterval(metronomeInterval);
+});
+</script>
+
+
+</body>
+</html>
