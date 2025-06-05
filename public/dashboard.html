@@ -10,15 +10,18 @@
 <link rel="stylesheet" href="dashboard.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Poppins:wght@600&display=swap" rel="stylesheet">
  
+  <link rel="icon" type="image/png" href="images/guitarraimg">
 </head>
 <body>
   <!-- PHASED ROADMAP PRIORITY INJECTION -->
+  <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle Sidebar" aria-expanded="false">
+    <i class="fas fa-bars"></i>
+  </button>
   <div class="dashboard-container">
     <main class="main-content">
       <header class="header">
         <div class="logo">
-          <i class="fas fa-guitar"></i>
-          <h1>Guitarra</h1>
+          <img src="images/guitarraimg.png" alt="Guitarra Logo" style="height: 100px; color: black;">
         </div>
       </header>
       <section class="search-section">
@@ -190,6 +193,14 @@ fetch('/api/files')
 
   document.getElementById('logoutBtn').addEventListener('click', () => {
     window.location.href = 'index.html';
+  });
+
+  // Sidebar toggle logic with aria-expanded
+  const toggleButton = document.getElementById('sidebarToggle');
+  toggleButton.addEventListener('click', () => {
+    const sidebar = document.querySelector('.sidebar');
+    const isVisible = sidebar.classList.toggle('sidebar-visible');
+    toggleButton.setAttribute('aria-expanded', isVisible);
   });
 
 
