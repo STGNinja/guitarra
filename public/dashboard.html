@@ -7,51 +7,50 @@
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<link rel="stylesheet" href="dashboard.css">   
+<link rel="stylesheet" href="dashboard.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Poppins:wght@600&display=swap" rel="stylesheet">
  
 </head>
 <body>
   <!-- PHASED ROADMAP PRIORITY INJECTION -->
   <div class="dashboard-container">
     <main class="main-content">
-      <div class="header">
-        <button id="logoutBtn" class="btn btn-danger">Log Out</button>
-      </div>
-      <input type="text" id="searchInput" placeholder="Search files..." />
-      <div class="overlay">
-        <h3 class="mb-4 text-center">Your Guitar Files</h3>
-        <ul id="fileList" style="list-style: none; padding: 0;">
-          <!-- File items will be injected here -->
+      <header class="header">
+        <div class="logo">
+          <i class="fas fa-guitar"></i>
+          <h1>Guitarra</h1>
+        </div>
+      </header>
+      <section class="search-section">
+        <input type="text" id="searchInput" placeholder="Search files..." />
+        <h3 class="section-title">Your Guitar Files</h3>
+      </section>
+      <section class="files-section overlay">
+        <ul id="fileList" class="file-list">
+          <!-- File items injected here -->
         </ul>
-      </div>
+      </section>
     </main>
-
     <aside class="sidebar">
-      <section class="profile-section">
+      <div class="profile-section">
         <div class="profile-avatar">
           <img id="profileAvatar" src="" alt="User Avatar">
           <div id="profileInitial"></div>
         </div>
-        <div id="greeting" style="margin-top: 10px; font-weight: 600; text-align: right; width: 100%;">Welcome!</div>
-        <div class="settings-icon" title="Settings" style="margin-top: 15px; font-size: 24px; color: #666; cursor: pointer;">
-          <i class="fas fa-cog"></i>
-        </div>
-      </section>
-      <section class="recently-played">
+        <div id="greeting">Welcome!</div>
+      </div>
+      <div class="recently-played">
         <h3>Recently Played</h3>
-        <ul id="recentlyPlayedList" style="list-style:none; padding-left:0; margin-top:10px;">
-          <!-- Recently played items -->
-        </ul>
-      </section>
-      <section class="favorites-tab">
+        <ul id="recentlyPlayedList" class="list-style-none"></ul>
+      </div>
+      <div class="favorites-tab">
         <h3>Favorites</h3>
-        <ul id="favoritesList" style="list-style:none; padding-left:0; margin-top:10px;">
-          <!-- Favorites items -->
-        </ul>
-      </section>
-      <section class="dark-mode-toggle" title="Toggle Dark Mode">
+        <ul id="favoritesList" class="list-style-none"></ul>
+      </div>
+      <div class="dark-mode-toggle" title="Toggle Dark Mode">
         <i class="fas fa-moon"></i>
-      </section>
+      </div>
+      <button id="logoutBtn" class="btn btn-danger">Log Out</button>
     </aside>
   </div>
 
@@ -79,7 +78,7 @@ fetch('/api/files')
   function getYouTubeEmbedHTML(query) {
     const encodedQuery = encodeURIComponent(query + ' guitar lesson');
     return `
-      <div class="youtube-embed" style="margin-top: 10px; border-radius: 8px; overflow: hidden;">
+      <div class="youtube-embed">
         <iframe width="100%" height="200" src="https://www.youtube.com/embed?listType=search&list=${encodedQuery}" title="YouTube video" frameborder="0" allowfullscreen></iframe>
       </div>`;
   }
@@ -91,7 +90,6 @@ fetch('/api/files')
     );
     if (filteredFiles.length === 0) {
       const li = document.createElement('li');
-      li.style.color = '#333';
       li.textContent = 'No files match your search.';
       fileList.appendChild(li);
     } else {
@@ -103,7 +101,6 @@ fetch('/api/files')
         li.innerHTML = `
           <span>${entry.name} <span style="font-size: 0.85em; color: #666;">${ext}</span>${isFavorite ? ' <i class="fas fa-star" style="color:#f5a623;"></i>' : ''}</span>
           <div>
-            <button class="btn btn-warning btn-sm favorite-btn" data-file="${entry.file}">${isFavorite ? 'Unfavorite' : 'Favorite'}</button>
             <a href="guitar/${entry.file}" download class="btn btn-primary px-3 download-btn" data-file="${entry.file}">Download</a>
           </div>
           ${getYouTubeEmbedHTML(entry.name)}
@@ -315,9 +312,9 @@ const metronomeDiv = document.createElement('div');
 metronomeDiv.style.marginTop = '20px';
 metronomeDiv.innerHTML = `
   <label for="bpmControl">Metronome BPM: <span id="bpmValue">60</span></label>
-  <input type="range" id="bpmControl" min="40" max="200" value="60" style="width: 100%;">
-  <button id="startMetronome" class="btn btn-primary" style="margin-top:10px;">Start Metronome</button>
-  <button id="stopMetronome" class="btn btn-danger" style="margin-top:10px; margin-left:10px;">Stop</button>
+  <input type="range" id="bpmControl" min="40" max="200" value="60">
+  <button id="startMetronome" class="btn btn-primary">Start Metronome</button>
+  <button id="stopMetronome" class="btn btn-danger">Stop</button>
 `;
 document.querySelector('.header').appendChild(metronomeDiv);
 
