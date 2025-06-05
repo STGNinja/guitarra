@@ -52,7 +52,7 @@
 									</label>
 								</div>
 								<div class="w-50 text-md-right">
-									<a href="#" style="color: #fff">Forgot Password</a>
+									<a href="#" id="forgotPasswordLink" style="color: #fff">Forgot Password</a>
 								</div>
 	            </div>
 	          </form>
@@ -61,6 +61,9 @@
 	          	<a href="#" id="googleSignIn" class="px-2 py-2 rounded" style="background-color: #fff; color: #444; border: 1px solid #ccc;">
 	             <i class="fa fa-google mr-2"></i> Google
 	           </a>
+	          	<a href="#" id="phoneSignIn" class="px-2 py-2 rounded" style="background-color: #fff; color: #444; border: 1px solid #ccc; margin-left: 10px;">
+	          	  <i class="fa fa-phone mr-2"></i> Phone
+	          	</a>
 	          </div>
 	          <p class="w-100 text-center mt-3" style="color: white;">Don’t have an account? <a href="signup.html" style="color: #ffd700;">Sign up here</a></p>
 		      </div>
@@ -120,6 +123,49 @@
         alert('Google sign-in failed: ' + error.message);
       });
   });
+
+  document.getElementById('phoneSignIn').addEventListener('click', function(event) {
+    event.preventDefault();
+    const phoneNumber = prompt('Enter your phone number (e.g. +15555555555):');
+    if (!phoneNumber) return;
+
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+        size: 'invisible'
+      });
+    }
+    const appVerifier = window.recaptchaVerifier;
+
+    auth.signInWithPhoneNumber(phoneNumber, appVerifier)
+      .then((confirmationResult) => {
+        const code = prompt('Enter the verification code you received:');
+        if (!code) return;
+        return confirmationResult.confirm(code);
+      })
+      .then((result) => {
+        window.location.href = 'dashboard.html';
+      })
+      .catch((error) => {
+        alert('Phone sign-in failed: ' + error.message);
+      });
+  });
+
+  document.getElementById('forgotPasswordLink').addEventListener('click', function(event) {
+    event.preventDefault();
+    const email = prompt('Please enter your email address to reset your password:');
+    if (email) {
+      auth.sendPasswordResetEmail(email)
+        .then(() => {
+          alert('Password reset email sent!');
+        })
+        .catch((error) => {
+          alert('Error: ' + error.message);
+        });
+    }
+  });
+
+  // Forgot password logic is handled on forgot-password.html using firebase.auth().sendPasswordResetEmail(email)
 </script>
+<div id="recaptcha-container"></div>
 	</body>
 </html>
