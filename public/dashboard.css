@@ -1,6 +1,7 @@
 /* Base Styles */
 body {
-  background: #f1f3f2;
+  background: url('https://t4.ftcdn.net/jpg/01/23/60/47/360_F_123604771_IOtdy5cM3yLshKlH01ynRUsvHmbfUvmd.jpg') no-repeat center center fixed;
+  background-size: cover;
   color: #1c1c1e;
   font-family: 'SF Pro Display', 'Helvetica Neue', sans-serif;
   margin: 0;
@@ -56,13 +57,14 @@ h2, h3 {
 }
 
 /* Updated recently-played, favorites-tab, dark-mode-toggle styles */
+/* Glassmorphism for widgets */
 .recently-played,
 .favorites-tab,
 .dark-mode-toggle {
   display: flex;
   flex-direction: column;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(14px);
   border-radius: 14px;
   padding: 16px 20px;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.04);
@@ -128,12 +130,13 @@ body.dark-mode .favorites-tab ul li {
   overflow-y: auto;
   overflow-x: hidden;
   word-wrap: break-word;
-  background: #f5f7fa;
+  background: url(https://static.vecteezy.com/system/resources/previews/007/736/639/non_2x/abstract-elegant-3d-white-gold-wave-shapes-and-lines-on-clean-luxury-background-vector.jpg);
+  background-size: cover;
 }
 
 .sidebar section {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(14px);
   border-radius: 16px;
   box-shadow: 0 8px 16px rgba(0,0,0,0.05);
   padding: 20px;
@@ -141,14 +144,15 @@ body.dark-mode .favorites-tab ul li {
 }
 
 .sidebar section:hover {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.4);
   box-shadow: 0 12px 20px rgba(0, 0, 0, 0.06);
   transform: translateY(-2px);
 }
 
 /* Overlay Box */
 .overlay {
-  background: #f0f2f5;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(14px);
   border-radius: 20px;
   box-shadow: inset 4px 4px 12px #d1d9e6, inset -4px -4px 12px #ffffff;
   padding: 30px;
@@ -157,8 +161,8 @@ body.dark-mode .favorites-tab ul li {
 
 /* File Items */
 .file-item {
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(18px);
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(14px);
   padding: 24px 28px;
   border-radius: 20px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
@@ -315,25 +319,19 @@ body.dark-mode .main-content {
   background: #000;
 }
 
-body.dark-mode .sidebar,
-body.dark-mode .header,
-body.dark-mode .file-item {
-  background: rgba(30, 30, 30, 0.85);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 10px 32px rgba(0,0,0,0.5);
-  color: #f5f5f7;
-}
-
+body.dark-mode .file-item,
+body.dark-mode .overlay,
 body.dark-mode .sidebar section,
 body.dark-mode .recently-played,
 body.dark-mode .favorites-tab,
 body.dark-mode .dark-mode-toggle {
-  background: rgba(40, 40, 45, 0.85);
+  background: rgba(30, 30, 30, 0.35);
+  backdrop-filter: blur(14px);
   color: #f5f5f7;
 }
 
 body.dark-mode .sidebar section:hover {
-  background: rgba(60, 60, 65, 0.95);
+  background: rgba(60, 60, 65, 0.5);
 }
 
 body.dark-mode .profile-info h4,
