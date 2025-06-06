@@ -11,12 +11,134 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Poppins:wght@600&display=swap" rel="stylesheet">
  
   <link rel="icon" type="image/png" href="images/guitarraimg">
+  <style>
+    #profileInitial {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: #555;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      font-family: 'Inter', sans-serif;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .close-tuner-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: none;
+      border: none;
+      font-size: 16px;
+      color: #007aff;
+      cursor: pointer;
+      padding: 6px 12px;
+      transition: color 0.2s;
+      z-index: 1000;
+    }
+
+    .close-tuner-btn:hover {
+      color: #005bb5;
+    }
+
+    body.dark-mode .close-tuner-btn {
+      color: #0a84ff;
+    }
+
+    body.dark-mode .close-tuner-btn:hover {
+      color: #0070f3;
+    }
+
+    .tuner-content {
+      position: relative;
+    }
+    .string-buttons {
+    .target-note-display {
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+    }
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .string-btn {
+      padding: 12px 20px;
+      font-size: 18px;
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      color: #fff;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .string-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .string-btn.active {
+      background: rgba(0, 123, 255, 0.3);
+      border-color: rgba(0, 123, 255, 0.6);
+      box-shadow: 0 0 12px rgba(0, 123, 255, 0.8);
+    }
+
+    @media (max-width: 600px) {
+      .string-btn {
+        flex: 1 1 40%;
+      }
+    }
+  </style>
 </head>
 <body>
   <!-- PHASED ROADMAP PRIORITY INJECTION -->
   <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle Sidebar" aria-expanded="false">
     <i class="fas fa-bars"></i>
   </button>
+  <button id="tunerToggle" class="tuner-toggle" aria-label="Toggle Tuner Sidebar" aria-expanded="false">
+    🎵 Tuner
+  </button>
+  <aside id="tunerSidebar" class="tuner-sidebar">
+    <button id="closeTunerSidebar" class="close-tuner-btn" aria-label="Close Tuner">← Back</button>
+    
+    <div class="tuner-content">
+      <h2 class="tuner-title">Guitar Tuner</h2>
+      <div class="target-note-display">
+        Target: <span id="targetNote">--</span>
+      </div>
+      <div class="tuner-circle" id="tunerCircle">
+        <div class="note-display" id="tunerNote">--</div>
+      </div>
+      <div class="string-buttons">
+        <button class="string-btn" data-note="E2">E</button>
+        <button class="string-btn" data-note="A2">A</button>
+        <button class="string-btn" data-note="D3">D</button>
+        <button class="string-btn" data-note="G3">G</button>
+        <button class="string-btn" data-note="B3">B</button>
+        <button class="string-btn" data-note="E4">e</button>
+      </div>
+      <div class="tuner-readings">
+        <p id="tunerFreq">Frequency: -- Hz</p>
+        <p id="tunerStatus">Status: --</p>
+      </div>
+    </div>
+  </aside>
   <div class="dashboard-container">
     <main class="main-content">
       <header class="header">
@@ -233,6 +355,137 @@ fetch('/api/files')
   //   // Play selected guitar file audio
   // }
   // (Practice session and metronome sections removed as per new UI structure)
+  // Tuner Sidebar Toggle
+  const tunerToggle = document.getElementById('tunerToggle');
+  const tunerSidebar = document.getElementById('tunerSidebar');
+  tunerToggle.addEventListener('click', () => {
+    const expanded = tunerSidebar.classList.toggle('visible');
+    tunerToggle.setAttribute('aria-expanded', expanded);
+  });
+
+  // Basic Pitch Detection for Tuner (uses Web Audio API)
+  let audioContext;
+  let analyser;
+  let dataArray;
+  let source;
+
+  function startTuner() {
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser();
+      source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      analyser.fftSize = 2048;
+      dataArray = new Float32Array(analyser.fftSize);
+      updateTuner();
+    }).catch(err => {
+      console.error('Mic access denied or error:', err);
+      document.getElementById('tunerStatus').textContent = 'Mic access denied.';
+    });
+  }
+
+  function autoCorrelate(buffer, sampleRate) {
+    let SIZE = buffer.length;
+    let rms = 0;
+    for (let i = 0; i < SIZE; i++) {
+      let val = buffer[i];
+      rms += val * val;
+    }
+    rms = Math.sqrt(rms / SIZE);
+    if (rms < 0.01) return -1;
+
+    let r1 = 0, r2 = SIZE - 1, thres = 0.2;
+    for (let i = 0; i < SIZE / 2; i++) {
+      if (Math.abs(buffer[i]) < thres) {
+        r1 = i;
+        break;
+      }
+    }
+    for (let i = 1; i < SIZE / 2; i++) {
+      if (Math.abs(buffer[SIZE - i]) < thres) {
+        r2 = SIZE - i;
+        break;
+      }
+    }
+
+    buffer = buffer.slice(r1, r2);
+    SIZE = buffer.length;
+
+    let c = new Array(SIZE).fill(0);
+    for (let i = 0; i < SIZE; i++) {
+      for (let j = 0; j < SIZE - i; j++) {
+        c[i] = c[i] + buffer[j] * buffer[j + i];
+      }
+    }
+
+    let d = 0;
+    while (c[d] > c[d + 1]) d++;
+    let maxval = -1, maxpos = -1;
+    for (let i = d; i < SIZE; i++) {
+      if (c[i] > maxval) {
+        maxval = c[i];
+        maxpos = i;
+      }
+    }
+
+    let T0 = maxpos;
+    return sampleRate / T0;
+  }
+
+  function updateTuner() {
+    analyser.getFloatTimeDomainData(dataArray);
+    let pitch = autoCorrelate(dataArray, audioContext.sampleRate);
+    if (pitch !== -1) {
+      const detectedNote = frequencyToNote(pitch);
+      document.getElementById('tunerFreq').textContent = `Frequency: ${pitch.toFixed(2)} Hz`;
+      document.getElementById('tunerNote').textContent = `Note: ${detectedNote}`;
+      if (selectedTarget) {
+        if (detectedNote === selectedTarget) {
+          document.getElementById('tunerStatus').textContent = 'In Tune ✔️';
+        } else {
+          document.getElementById('tunerStatus').textContent = `Tuning... (Target: ${selectedTarget})`;
+        }
+      } else {
+        document.getElementById('tunerStatus').textContent = 'Detecting...';
+      }
+    } else {
+      document.getElementById('tunerStatus').textContent = 'No signal';
+    }
+    requestAnimationFrame(updateTuner);
+  }
+
+  function frequencyToNote(freq) {
+    const A4 = 440;
+    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const semitones = 12 * (Math.log2(freq / A4));
+    const index = Math.round(semitones) + 57;
+    return noteNames[index % 12] + Math.floor(index / 12);
+  }
+
+  startTuner();
+
+  // Tuner string button logic
+  let selectedTarget = null;
+
+  const stringButtons = document.querySelectorAll('.string-btn');
+  stringButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Remove active class from all
+      stringButtons.forEach(b => b.classList.remove('active'));
+      // Mark this one active
+      btn.classList.add('active');
+
+      // Set and display the target note
+      selectedTarget = btn.getAttribute('data-note');
+      document.getElementById('targetNote').textContent = selectedTarget;
+    });
+  });
+
+  // Close Tuner Sidebar button logic
+  document.getElementById('closeTunerSidebar').addEventListener('click', () => {
+    tunerSidebar.classList.remove('visible');
+    tunerToggle.setAttribute('aria-expanded', false);
+  });
 </script>
 
 <script type="module">
